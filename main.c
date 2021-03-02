@@ -4,22 +4,23 @@
 #include <time.h>
 
 
-
-typedef struct block{
-    char* pointr;
-    int free;
-    struct zoznam* next;
-
-}ZOZNAM;
-
-typedef struct heap_block
-{
-    struct heap_block* next;
-    size_t size;
-    int isfree;
-    int x; // for alligment
-}header;
 char region[100000];
+typedef struct block
+{
+    struct block* prev;
+    struct block *next;
+    int free;
+    int size;
+
+}BLOCK;
+
+
+BLOCK *list= region;
+
+
+
+
+
 
 
 
@@ -48,6 +49,14 @@ void* memory_alloc(unsigned int size) {
 
             }
 
+            list->prev = NULL;
+            list->next = ptr_alloc + size;
+	        list->free = 0;
+	        list->size = size;
+	        list = list->prev;
+	        list = (list->next);
+
+
             return ptr_alloc;
 
 	    }
@@ -68,9 +77,14 @@ int memory_check(void* ptr) {
 
 }
 void memory_init(void* ptr, unsigned int size) {
-    ZOZNAM pointers;
+
 	//printf("vstupil si do memory init\n");
 	//printf("pointer ptr ukazuje na adresu : %p\n", ptr);
+
+	list->next = ptr+4;
+	list->size = size;
+	list->free = 1;
+	list->prev = NULL;
 
 	char* a;
     a = ptr;
@@ -90,83 +104,17 @@ void memory_init(void* ptr, unsigned int size) {
 	}
     //printf("pointer a ukazuje na adresu : %p\n", a);
 	*a = "a";
-	a = 5;
+	*a = 5;
 }
 
 
-/*int main(){
+int main(){
     memory_init(region, 100);   // Initialization of my memory of 50 bytes
     char *pointer1 = (char *) memory_alloc(10);
     char *pointer2 = (char *) memory_alloc(12);
     char *pointer3 = (char *) memory_alloc(30);
     memset(region, 0, 10);
     return 0;
-}*/
-void z1_testovac(char *region, char **pointer, int minBlock, int maxBlock, int minMemory, int maxMemory, int testFragDefrag) {
-    unsigned int allocated = 0;
-    unsigned int mallocated = 0;
-    unsigned int allocated_count = 0;
-    unsigned int mallocated_count = 0;
-    unsigned int i = 0;
-    int random_memory = 0;
-    int random = 0;
-    memset(region, 0, 100000);
-    random_memory = (rand() % (maxMemory-minMemory+1)) + minMemory;
-    memory_init(region + 500, random_memory);
-    if (testFragDefrag) {
-        do {
-            pointer[i] = memory_alloc(8);
-            if (pointer[i])
-                i++;
-        } while (pointer[i]);
-        for (int j = 0; j < i; j++) {
-            if (memory_check(pointer[j])) {
-                memory_free(pointer[j]);
-            }
-            else {
-                printf("Error: Wrong memory check.\n");
-            }
-        }
-    }
-    i = 0;
-    while (allocated <= random_memory-minBlock) {
-        random = (rand() % (maxBlock-minBlock+1)) + minBlock;
-        if (allocated + random > random_memory)
-            continue;
-        allocated += random;
-        allocated_count++;
-        pointer[i] = memory_alloc(random);
-        if (pointer[i]) {
-            i++;
-            mallocated_count++;
-            mallocated += random;
-        }
-    }
-    for (int j = 0; j < i; j++) {
-        if (memory_check(pointer[j])) {
-            memory_free(pointer[j]);
-        }
-        else {
-            printf("Error: Wrong memory check.\n");
-        }
-    }
-    memset(region +500, 0, random_memory);
-    for (int j = 0; j < 100000; j++) {
-        if (region[j] != 0) {
-            region[j] = 0;
-            printf("Error: Modified memory outside the managed region. index: %d\n",j-500);
-        }
-    }
-    float result = ((float)mallocated_count / allocated_count) * 100;
-    float result_bytes = ((float)mallocated / allocated) * 100;
-    printf("Memory size of %d bytes: allocated %.2f%% blocks (%.2f%% bytes).\n", random_memory, result, result_bytes);
 }
 
-int main() {
-    char region[100000];
-    char* pointer[13000];
-    z1_testovac(region, pointer, 8, 24, 50, 100, 1);
-    z1_testovac(region, pointer, 8, 1000, 10000, 20000, 0);
-    z1_testovac(region, pointer, 8, 35000, 50000, 99000, 0);
-    return 0;
-}
+
