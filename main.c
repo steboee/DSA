@@ -1,19 +1,17 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include <time.h>
+
 
 #define VELKOST 1000
 
 
-int region[VELKOST];
+char region[VELKOST];
 typedef struct block
 {
     int size;
     char free;
     struct block *next;
-
-
 
 }BLOCK;
 
@@ -41,7 +39,7 @@ void* memory_alloc(unsigned int size) {
 
     list->size = size;
     list->free = 0;
-    list->next = list+size;
+    list->next++;
     list = list->next;
     list->size = VELKOST - memory_used - size;
     list->free = 1;
@@ -70,7 +68,7 @@ void memory_init(void* ptr, unsigned int size) {
 }
 
 int main(){
-    memory_init(region, 100);   // Initialization of my memory of 50 bytes
+    memory_init(region, 100);   // Initialization of my memory of 100bytes
     char *pointer1 = (char *) memory_alloc(10);
     char *pointer2 = (char *) memory_alloc(12);
     char *pointer3 = (char *) memory_alloc(30);
