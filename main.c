@@ -1,48 +1,53 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#define VELKOST 100
 
 
-#define VELKOST 1000
+int region[VELKOST];
 
-
-char region[VELKOST];
-typedef struct block
-{
+typedef struct header{
     int size;
-    char free;
-    struct block *next;
+    struct header *next;
+}Header;
 
-}BLOCK;
-
-
-BLOCK *list= region;
-
-
+typedef struct footer{
+    int size;
+    struct footer *previous;
+}Footer;
 
 
+Header *list= (int*)region;
 
 
 
 
 void* memory_alloc(unsigned int size) {
+    int zbytek;
+    zbytek = VELKOST;
 
-    if( size <= 0 ){
-        return NULL;
+    Header *current;
+    current = list;
+
+    while (current->size < 0){
+        zbytek = zbytek + current->size;
+        current = current->next;
+
     }
 
-    int memory_used=0;
-    while(list->free != 1){
-        list = list->next;
-        memory_used = memory_used + list->size;
-    }
 
-    list->size = size;
-    list->free = 0;
-    list->next++;
-    list = list->next;
-    list->size = VELKOST - memory_used - size;
-    list->free = 1;
+
+    int *test1;
+
+    test1 = current;
+
+
+    current->size = -size;
+    zbytek = zbytek - size;
+    current->next = test1+size;
+    current = current->next;
+    current->size = zbytek;
+    return current;
 
 
 }
@@ -59,10 +64,15 @@ int memory_check(void* ptr) {
 
 
 void memory_init(void* ptr, unsigned int size) {
+    for (int i = 0 ; i<size;i++){
+        region[i] = 0;
+    }
 
-    list->size = size;
-    list->free = 1;
-    list->next = ptr + size;
+    list->next = NULL;
+
+    region[0] = size;
+    region[4] = list->next;
+
 
 
 }
