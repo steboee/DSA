@@ -111,6 +111,34 @@ int memory_free(void* valid_ptr) {
 }
 
 int memory_check(void* ptr) {
+    int * KONIEC = memory + *memory-4;
+    int*head;
+    head=(int*)memory+1;
+    char*test;
+    test = head;
+
+
+    while((int*)test <KONIEC){
+        if(ptr == test) {
+            if(*(int*)ptr < 0){
+                return 1;
+            }
+            else{
+                return 0;
+            }
+
+        }
+        else{
+            int ofsetik = abs(*(int*)test)+  VLK_HLAV + VLK_PATY;
+            test = test+ofsetik;
+        }
+    }
+    return 0;
+
+
+
+
+    return 0;
 
 
 }
@@ -138,9 +166,10 @@ int main(){
     char *pointer1 = (char *) memory_alloc(13);
     char *pointer2 = (char *) memory_alloc(7);
     memory_free(pointer1);
-    char *pointer3 = (char *) memory_alloc(13);
+    char *pointer3 = (char *) memory_alloc(5);
 
-    memset(region, 0, 10);
+    memset(region, 0, 50);
     return 0;
 }
+
 
