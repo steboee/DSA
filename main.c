@@ -55,8 +55,8 @@ void* memory_alloc(unsigned int size) {
     int test_size = test+size+4+4;
     int mem_size = memory + *memory-4;
     if (test+size+4+4 > mem_size){                           // Kontrola ak by uživateľ chcel alokovať viac Bytov ako je vôbec jeho voľná pamäť veľká
-        printf("ATTEMPTING TO ENTER OUTSIDE YOUR MEMORY");
-        exit(1);
+        printf("ATTEMPTING TO ENTER OUTSIDE YOUR MEMORY\n");
+        return NULL;
     }
 
 
@@ -91,62 +91,90 @@ void* memory_alloc(unsigned int size) {
 
 }
 
+
+
+
+
 int memory_free(void* valid_ptr) {
-    char*p;
     int *header;
     int *header_before;
     int *header_after;
     int *footer;
     int *footer_before;
     int *footer_after;
-    p = (char*)valid_ptr;
+    int * KONIEC = memory + *memory-4;
     int velkost;
+
+    char*p;
+
 
     header = (int*)valid_ptr;
     footer_before = (int*)valid_ptr - 1;
 
-    if(footer_before == memory){                            //Odsraňujem prvý blok v pamati
+    p = header;
+    p= p + abs(*p) + VLK_HLAV + VLK_PATY;
+    header_after = p;
 
+    p=header;
+    p = p + abs(*p) + VLK_HLAV;
+    footer = p;
+
+    p=header_after;
+    p = p + abs(*header_after) + VLK_HLAV;
+    footer_after = p;
+
+    p=footer_before;
+    p = p - abs(*p)- VLK_PATY;
+    header_before = p;
+
+
+    p = (char*)valid_ptr;
+
+    if(footer_before == (int*)memory){                            //Odsraňujem prvý blok v pamati
         velkost = abs(*header);
-        header_after = p +velkost + VLK_HLAV + VLK_PATY;
-
-        if(*header_after >0){                                // Spájam 2 po sebe idúce free bloky
-            velkost = velkost + *header_after;
-            p = header_after;
-            p = p + *header_after;
-            footer_after = p;
+        if(*header_after >0){                                // |START OF HEAP|----|WANT_TO_DEALLOCATE|----|FREE|
+            velkost = velkost + *header_after + VLK_HLAV + VLK_PATY;
             *footer_after = velkost;
             *header_after =0;
             header_after = NULL;
+            *footer = 0;
+            footer = NULL;
+            *header = velkost;
             return 0;
-
         }
-        else{                                                 //Nespájam nič... je to len prvý blok  a za nim je další alokovaný
+        else{                                                 // |START HEAP|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
             *header = abs(*header);
-            p = p+velkost+VLK_HLAV;
-            footer = p;
             *footer = *header;
             return 0;
         }
 
     }
+    else if(header_after == KONIEC){                           // Odstranujem posledný blok pamete
 
-    else{                                                                                                           //Nie je to prvý blok pamate
-        velkost = abs(*header);
-        header_after = p +velkost + VLK_HLAV + VLK_PATY;
-        footer = p + abs(*p)+VLK_HLAV;
+        if(*header_before >0) {                                               // |FREE|----|WANT_TO_DEALLOCATE|----|END OF HEAP|
+            velkost = *header_before + abs(*header);
+            *header_before = velkost;
+            *footer = velkost;
 
-        if(*header_after >0 && *footer_before >0 ) {                                                                       // Uvolnujem blok medzi 2 free blokmi
-            velkost = velkost + *footer_before + *header_after +2*VLK_HLAV + 2* VLK_PATY;                 //velkost noveho free bloku musim pripočítať 1 hlavicku a 1 paticku bloku ktorý
+
+        }
+
+
+        else{                                                  // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|END OF HEAP|
+
+
+
+        }
+    }
+
+    else{                                                                                                           //Nie je to prvý blok ani posledný blok pamate
+
+
+
+        //|FREE|----|WANT_TO_DEALLOCATE|----|FREE|
+        if(*footer_before >0 && *header_after >0) {                                                        //|FREE|----|WANT_TO_DEALLOCATE|----|FREE|
+            velkost = abs(*header) + *footer_before + *header_after +2*VLK_HLAV + 2* VLK_PATY;                 //velkost noveho free bloku musim pripočítať 1 hlavicku a 1 paticku bloku ktorý
                                                                                                          // uvolnujem ....  + paticku free bloku pred nim     a hlavicku free bloku za nim
-            p = header_after;
-            p = p + abs(*header_after) + VLK_HLAV;
-            footer_after = p;
-
-            p=footer_before;
-            p = p - *p- VLK_PATY;
-            header_before = p;
-
             *header_before = velkost;
             *footer_after = velkost;
 
@@ -158,25 +186,45 @@ int memory_free(void* valid_ptr) {
             footer = NULL;
             *header = 0;
             header = NULL;
+
             return 0;
+
         }
 
+        // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
+        else if(*footer_before <0 && *header_after <0)  {                                    // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
+            velkost = abs(*header);
+            *header = abs(*header);
+            *footer = *header;
+        }
+
+        // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|FREE|
+        else if(*footer_before <0 && *header_after >0){                                      // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|FREE|
+            velkost = abs(*header)+ *header_after;
+            *header = velkost;
+            *footer = 0;
+            *header_after = 0;
+            footer = NULL;
+            header_after = NULL;
+
+        }
+
+
+        //  |FREE|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
+        else if(*header_after >0 && *footer_before <0){
+
+
+        }
 
 
     }
 
-    velkost = abs(*(int*)valid_ptr);
-    *(int*)valid_ptr = abs(*(int*)valid_ptr);
-    p = p+velkost+VLK_HLAV;
-    footer =p;
-    *footer = *(int*)valid_ptr;
-    valid_ptr = NULL;
 
 
 }
 
 int memory_check(void* ptr) {
-    int * KONIEC = memory + *memory-4;
+    int *KONIEC = (int*)memory + *memory-4;
     int*head;
     head=(int*)memory+1;
     char*test;
@@ -190,7 +238,6 @@ int memory_check(void* ptr) {
             else{
                 return 0;
             }
-
         }
         else{
             int ofsetik = abs(*(int*)test)+  VLK_HLAV + VLK_PATY;
@@ -205,22 +252,95 @@ void memory_init(void* ptr, unsigned int size) {
     memory = (char*)ptr;
     memset(memory,0,size);
     char *mem_size = (char*)memory;
-    *(mem_size) = size;                                                                                   //Zaciatok HEAP-u
+    *(mem_size) = (int)size;                                                                                   //Zaciatok HEAP-u
 
-    *(int*)(mem_size+4) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
-    *(int*)(mem_size+size-8) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
-    *(int*)(mem_size+size-4) = size;                                                                      //Koniec Heap-u
+    *(int*)(mem_size+4) = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
+    *(int*)(mem_size+size-8) = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
+    *(int*)(mem_size+size-4) = (int)size;                                                                      //Koniec Heap-u
 
 }
 
+
+
+
+void z1_testovac(char *region, char **pointer, int minBlock, int maxBlock, int minMemory, int maxMemory, int testFragDefrag) {
+    unsigned int allocated = 0;
+    unsigned int mallocated = 0;
+    unsigned int allocated_count = 0;
+    unsigned int mallocated_count = 0;
+    unsigned int i = 0;
+    int random_memory = 0;
+    int random = 0;
+    memset(region, 0, 10000);
+    random_memory = (rand() % (maxMemory-minMemory+1)) + minMemory;
+    memory_init(region + 500, random_memory);
+    if (testFragDefrag) {
+        do {
+            pointer[i] = memory_alloc(8);
+            if (pointer[i])
+                i++;
+        } while (pointer[i]);
+        for (int j = 0; j < i; j++) {
+            if (memory_check(pointer[j])) {
+                memory_free(pointer[j]);
+            }
+            else {
+                printf("Error: Wrong memory check.\n");
+            }
+        }
+    }
+    i = 0;
+    while (allocated <= random_memory-minBlock) {
+        random = (rand() % (maxBlock-minBlock+1)) + minBlock;
+        if (allocated + random > random_memory)
+            continue;
+        allocated += random + VLK_HLAV + VLK_PATY;
+        allocated_count++;
+        pointer[i] = memory_alloc(random);
+        if (pointer[i]) {
+            i++;
+            mallocated_count++;
+            mallocated += random+VLK_PATY+VLK_HLAV;
+        }
+    }
+    for (int j = 0; j < i; j++) {
+        if (memory_check(pointer[j])) {
+            memory_free(pointer[j]);
+        }
+        else {
+            printf("Error: Wrong memory check.\n");
+        }
+    }
+    memset(region + 500, 0, random_memory);
+    for (int j = 0; j < 10000; j++) {
+        if (region[j] != 0) {
+            region[j] = 0;
+            printf("Error: Modified memory outside the managed region. index: %d\n",j-500);
+        }
+    }
+    float result = ((float)mallocated_count / allocated_count) * 100;
+    float result_bytes = ((float)mallocated / allocated) * 100;
+    printf("Memory size of %d bytes: allocated %.2f%% blocks (%.2f%% bytes).\n", random_memory, result, result_bytes);
+}
+
+
+
+
+
+
 int main(){
-    char region[100];
+    char region[10000];
+    char* pointer [1000];
     memory_init(region, 100);   // Initialization of my memory of 100bytes
-    char *pointer1 = (char *) memory_alloc(13);
-    char *pointer2 = (char *) memory_alloc(7);
-    char *pointer3 = (char *) memory_alloc(2);
-    memory_free(pointer2);
-    memory_free(pointer3);
+
+    z1_testovac(region,pointer,8,24,50,100,1);
+    //char *pointer1 = (char *) memory_alloc(13);
+    //char *pointer2 = (char *) memory_alloc(7);
+    //char *pointer3 = (char *) memory_alloc(2);
+    //memory_free(pointer2);
+    //memory_free(pointer1);
+    //memory_free(pointer3);
+    //int a = memory_check(pointer1);
 
     memset(region, 0, 50);
     return 0;
