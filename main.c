@@ -67,17 +67,9 @@ void* memory_alloc(unsigned int size) {
 
     if (merge ==1){                                     // Spájanie zvyšného free bloku s alokovaným ( free blok by bol nevyužitelný -> (VELKOST <=8 )  zmestila by sa iba hlavicka a pata)
 
-
-
-        prev_memory = *head;
         *head = -size -remainig_memory;
         foot = (char*)(head)+size+4+remainig_memory;
         *foot = *head;
-
-        /*nexthead = foot+1;
-        *nexthead = prev_memory -size-VLK_HLAV-VLK_PATY;
-        nextfoot = ((char*)nexthead + *nexthead+4);
-        *nextfoot = *nexthead;*/
 
     }
     else{                                                   //alokovanie pamata vo velkom volnom bloku --> splitnem ho na 2 bloky  (1 bude moj alokovany a druhy bude free)
@@ -94,12 +86,6 @@ void* memory_alloc(unsigned int size) {
     }
 
 
-
-
-
-
-
-
     return ptr;
 
 
@@ -107,10 +93,18 @@ void* memory_alloc(unsigned int size) {
 
 int memory_free(void* valid_ptr) {
     char*p;
+    int *footer;
+    footer = (int*)valid_ptr;
     p=valid_ptr;
     int velkost;
     velkost = abs(*(int*)valid_ptr);
-    printf("%d",velkost);
+    *(int*)valid_ptr = abs(*(int*)valid_ptr);
+    p = p+velkost+VLK_HLAV;
+    footer =p;
+    *footer = *(int*)valid_ptr;
+    valid_ptr = NULL;
+
+
 
 
 
@@ -143,10 +137,9 @@ int main(){
     memory_init(region, 50);   // Initialization of my memory of 100bytes
     char *pointer1 = (char *) memory_alloc(13);
     char *pointer2 = (char *) memory_alloc(7);
-
-
-
     memory_free(pointer1);
+    char *pointer3 = (char *) memory_alloc(13);
+
     memset(region, 0, 10);
     return 0;
 }
