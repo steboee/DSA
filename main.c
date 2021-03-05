@@ -16,20 +16,25 @@ void* memory_alloc(unsigned int size) {
     int*nexthead;
     int*nextfoot;
     int prev_memory;
-    int * KONIEC = memory + *memory-4;
+    int *KONIEC;
 
     int merge=0;
     int remainig_memory;
+    int* pomocka_memory;
 
-    *KONIEC = *memory;
+    char*kon;
+    kon = memory-1 + *(int*)memory;
+    pomocka_memory = (int*)memory;
+    KONIEC = kon;
+    *KONIEC = *pomocka_memory;
     head=(int*)memory+1;
 
     char*test;
     test = (char*)head;
     while((int*)test <KONIEC){                 //prechádzaj cez alokované bloky az kým nenatrafíš na voľný
-        if (*(test) > 0){                       // Našla sa voľná pamäť
+        if (*(int*)(test) > 0){                       // Našla sa voľná pamäť
 
-            int free_block_size = (int)*test;         //free_block_size = velkosť !!dostupnej pamäťe pre používateľa!! (už čistá pamäť bez velkosti hlavičký a pamate)
+            int free_block_size = *(int*)test;         //free_block_size = velkosť !!dostupnej pamäťe pre používateľa!! (už čistá pamäť bez velkosti hlavičký a pamate)
 
             if(size <= free_block_size){
                 remainig_memory = free_block_size - (int)size;
@@ -53,8 +58,10 @@ void* memory_alloc(unsigned int size) {
 
 
     int mem_size = (int)memory + (int)*memory-4;
-    if ((int)(test+size+4+4) > mem_size){                           // Kontrola ak by uživateľ chcel alokovať viac Bytov ako je vôbec jeho voľná pamäť veľká
-        printf("ATTEMPTING TO ENTER OUTSIDE YOUR MEMORY\n");
+    char*pt= test+size+4+4;
+
+    if (pt > KONIEC){                           // Kontrola ak by uživateľ chcel alokovať viac Bytov ako je vôbec jeho voľná pamäť veľká
+        //printf("ATTEMPTING TO ENTER OUTSIDE YOUR MEMORY\n");
         return NULL;
     }
 
@@ -255,14 +262,25 @@ int memory_check(void* ptr) {
 }
 
 void memory_init(void* ptr, unsigned int size) {
+    int*head;
+    int*foot;
+    int*heap_start;
+    int*heap_end;
     memory = (char*)ptr;
     memset(memory,0,size);
-    char *mem_size = (char*)memory;
-    *(mem_size) = (int)size;                                                                                   //Zaciatok HEAP-u
+    heap_start = (int*)ptr;
+    head = (int*)ptr+1;
+    heap_end = (int*)(memory+size-1);
+    foot = heap_end-1;
 
-    *(int*)(mem_size+4) = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
-    *(int*)(mem_size+size-8) = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
-    *(int*)(mem_size+size-4) = (int)size;                                                                      //Koniec Heap-u
+
+
+    char *mem_size = (char*)memory;
+    *heap_start = size;                                                                                     //Zaciatok HEAP-u
+
+    *head = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
+    *foot = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
+    *heap_end = (int)size;                                                                      //Koniec Heap-u
 
 }
 
@@ -272,7 +290,7 @@ int main(){
     char region[100];
     memory_init(region, 100);   // Initialization of my memory of 100bytes
 
-    char *pointer1 = (char *) memory_alloc(13);
+    char *pointer1 = (char *) memory_alloc(10);
     char *pointer2 = (char *) memory_alloc(7);
     char *pointer3 = (char *) memory_alloc(2);
     char *pointer4 = (char *) memory_alloc(2);
@@ -289,5 +307,6 @@ int main(){
     memset(region, 0, 100);
     return 0;
 }
+
 
 
