@@ -110,24 +110,24 @@ int memory_free(void* valid_ptr) {
     header = (int*)valid_ptr;
     footer_before = (int*)valid_ptr - 1;
 
-    p = header;
+    p = (char*)header;
     p= p + abs(*p) + VLK_HLAV + VLK_PATY;
-    header_after = p;
+    header_after = (int*)p;
 
-    p = header;
+    p = (char*)header;
     p = p + abs(*p) + VLK_HLAV;
-    footer = p;
+    footer = (int*)p;
 
-    p = header_after;
+    p = (char*)header_after;
     p = p + abs(*header_after) + VLK_HLAV;
-    footer_after = p;
+    footer_after = (int*)p;
 
-    p = footer_before;
+    p = (char*)footer_before;
     p = p - abs(*p)- VLK_PATY;
-    header_before = p;
+    header_before = (int*)p;
 
 
-    if(footer_before == (int*)memory){                            //Odsraňujem prvý blok v pamati
+    if((int*)footer_before == (int*)memory){                            //Odsraňujem prvý blok v pamati
         velkost = abs(*header);
         if(*header_after >0){                                // |START OF HEAP|----|WANT_TO_DEALLOCATE|----|FREE|
             velkost = velkost + *header_after + VLK_HLAV + VLK_PATY;
@@ -199,8 +199,9 @@ int memory_free(void* valid_ptr) {
 
         // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|FREE|
         else if(*footer_before <0 && *header_after >0){                                      // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|FREE|
-            velkost = abs(*header)+ *header_after;
+            velkost = abs(*header)+ *header_after + VLK_HLAV +VLK_PATY;
             *header = velkost;
+            *footer_after = velkost;
             *footer = 0;
             *header_after = 0;
             footer = NULL;
@@ -212,8 +213,14 @@ int memory_free(void* valid_ptr) {
 
 
         //  |FREE|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
-        else if(*header_after >0 && *footer_before <0){
-
+        else if(*footer_before >0 && *header_after <0  ){
+            velkost = abs(*header) + *footer_before + VLK_HLAV + VLK_PATY;
+            *header = 0;
+            *footer_before =0;
+            *footer = velkost;
+            *header_before = velkost;
+            header=NULL;
+            footer_before =NULL;
 
             return 0;
         }
@@ -268,9 +275,16 @@ int main(){
     char *pointer1 = (char *) memory_alloc(13);
     char *pointer2 = (char *) memory_alloc(7);
     char *pointer3 = (char *) memory_alloc(2);
-    memory_free(pointer2);
-    memory_free(pointer1);
+    char *pointer4 = (char *) memory_alloc(2);
+    char *pointer5 = (char *) memory_alloc(2);
+    char *pointer6 = (char *) memory_alloc(2);
+
     memory_free(pointer3);
+    memory_free(pointer4);
+    memory_free(pointer2);
+    memory_free(pointer5);
+    memory_free(pointer6);
+    memory_free(pointer1);
 
     memset(region, 0, 100);
     return 0;
