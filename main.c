@@ -91,22 +91,86 @@ void* memory_alloc(unsigned int size) {
 
 }
 
-
 int memory_free(void* valid_ptr) {
     char*p;
+    int *header;
+    int *header_before;
+    int *header_after;
     int *footer;
-    footer = (int*)valid_ptr;
-    p=valid_ptr;
+    int *footer_before;
+    int *footer_after;
+    p = (char*)valid_ptr;
     int velkost;
+
+    header = (int*)valid_ptr;
+    footer_before = (int*)valid_ptr - 1;
+
+    if(footer_before == memory){                            //Odsraňujem prvý blok v pamati
+
+        velkost = abs(*header);
+        header_after = p +velkost + VLK_HLAV + VLK_PATY;
+
+        if(*header_after >0){                                // Spájam 2 po sebe idúce free bloky
+            velkost = velkost + *header_after;
+            p = header_after;
+            p = p + *header_after;
+            footer_after = p;
+            *footer_after = velkost;
+            *header_after =0;
+            header_after = NULL;
+            return 0;
+
+        }
+        else{                                                 //Nespájam nič... je to len prvý blok  a za nim je další alokovaný
+            *header = abs(*header);
+            p = p+velkost+VLK_HLAV;
+            footer = p;
+            *footer = *header;
+            return 0;
+        }
+
+    }
+
+    else{                                                                                                           //Nie je to prvý blok pamate
+        velkost = abs(*header);
+        header_after = p +velkost + VLK_HLAV + VLK_PATY;
+        footer = p + abs(*p)+VLK_HLAV;
+
+        if(*header_after >0 && *footer_before >0 ) {                                                                       // Uvolnujem blok medzi 2 free blokmi
+            velkost = velkost + *footer_before + *header_after +2*VLK_HLAV + 2* VLK_PATY;                 //velkost noveho free bloku musim pripočítať 1 hlavicku a 1 paticku bloku ktorý
+                                                                                                         // uvolnujem ....  + paticku free bloku pred nim     a hlavicku free bloku za nim
+            p = header_after;
+            p = p + abs(*header_after) + VLK_HLAV;
+            footer_after = p;
+
+            p=footer_before;
+            p = p - *p- VLK_PATY;
+            header_before = p;
+
+            *header_before = velkost;
+            *footer_after = velkost;
+
+            *footer =0;
+            footer = NULL;
+            *header_after = 0;
+            header_after = NULL;
+            *footer_before = 0;
+            footer = NULL;
+            *header = 0;
+            header = NULL;
+            return 0;
+        }
+
+
+
+    }
+
     velkost = abs(*(int*)valid_ptr);
     *(int*)valid_ptr = abs(*(int*)valid_ptr);
     p = p+velkost+VLK_HLAV;
     footer =p;
     *footer = *(int*)valid_ptr;
     valid_ptr = NULL;
-
-
-
 
 
 }
@@ -116,8 +180,7 @@ int memory_check(void* ptr) {
     int*head;
     head=(int*)memory+1;
     char*test;
-    test = head;
-
+    test = (char*)head;
 
     while((int*)test <KONIEC){
         if(ptr == test) {
@@ -136,38 +199,28 @@ int memory_check(void* ptr) {
     }
     return 0;
 
-
-
-
-    return 0;
-
-
 }
-
-
 
 void memory_init(void* ptr, unsigned int size) {
     memory = (char*)ptr;
     memset(memory,0,size);
     char *mem_size = (char*)memory;
-    *(mem_size) = size;
+    *(mem_size) = size;                                                                                   //Zaciatok HEAP-u
 
     *(int*)(mem_size+4) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
-    *(int*)(mem_size+size-8) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;     //Prvá patička
-    *(int*)(mem_size+size-4) = size;
-
-
-
+    *(int*)(mem_size+size-8) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
+    *(int*)(mem_size+size-4) = size;                                                                      //Koniec Heap-u
 
 }
 
 int main(){
-    char region[50];
-    memory_init(region, 50);   // Initialization of my memory of 100bytes
+    char region[100];
+    memory_init(region, 100);   // Initialization of my memory of 100bytes
     char *pointer1 = (char *) memory_alloc(13);
     char *pointer2 = (char *) memory_alloc(7);
-    memory_free(pointer1);
-    char *pointer3 = (char *) memory_alloc(5);
+    char *pointer3 = (char *) memory_alloc(2);
+    memory_free(pointer2);
+    memory_free(pointer3);
 
     memset(region, 0, 50);
     return 0;
