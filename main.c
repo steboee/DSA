@@ -70,16 +70,17 @@ void* memory_alloc(unsigned int size) {
 
 
         prev_memory = *head;
-        *head = -size;
-        foot = ((char*)(head)+size+4+remainig_memory);
+        *head = -size -remainig_memory;
+        foot = (char*)(head)+size+4+remainig_memory;
         *foot = *head;
+
         /*nexthead = foot+1;
         *nexthead = prev_memory -size-VLK_HLAV-VLK_PATY;
         nextfoot = ((char*)nexthead + *nexthead+4);
         *nextfoot = *nexthead;*/
 
     }
-    else{
+    else{                                                   //alokovanie pamata vo velkom volnom bloku --> splitnem ho na 2 bloky  (1 bude moj alokovany a druhy bude free)
 
 
         prev_memory = *head;
@@ -107,7 +108,11 @@ void* memory_alloc(unsigned int size) {
 int memory_free(void* valid_ptr) {
     char*p;
     p=valid_ptr;
-    while(*p>0);
+    int velkost;
+    velkost = abs(*(int*)valid_ptr);
+    printf("%d",velkost);
+
+
 
 }
 
@@ -126,8 +131,7 @@ void memory_init(void* ptr, unsigned int size) {
 
     *(int*)(mem_size+4) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
     *(int*)(mem_size+size-8) = size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;     //Prvá patička
-
-    *(int*)(mem_size+size-4) = size-SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP;
+    *(int*)(mem_size+size-4) = size;
 
 
 
@@ -135,16 +139,12 @@ void memory_init(void* ptr, unsigned int size) {
 }
 
 int main(){
-    char region[100];
-    memory_init(region, 100);   // Initialization of my memory of 100bytes
+    char region[50];
+    memory_init(region, 50);   // Initialization of my memory of 100bytes
     char *pointer1 = (char *) memory_alloc(13);
     char *pointer2 = (char *) memory_alloc(7);
-    char *pointer3 = (char *) memory_alloc(5);
-    char *pointer4 = (char *) memory_alloc(8);
-    char *pointer5 = (char *) memory_alloc(12);
-    char *pointer6 = (char *) memory_alloc(12);
-    char *ptrs;
-    memory_check(pointer1);
+
+
 
     memory_free(pointer1);
     memset(region, 0, 10);
