@@ -354,7 +354,7 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     }
 
 
-    int user_deallocated;
+    int user_deallocated=0;
     int size_of_dealocated;
     bool PROBLEM = false;
     int j=0;
@@ -384,7 +384,7 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     percentage = (float)((float)user_allocated/(float)memory_size)*100;
 
     //printf("User allocated : %d\nMemory size",user_allocated);
-    printf("SUCCESFULLY ALLOCATED : %d B in memory of size: %d B , what is %.2f%% of my memory\n",user_allocated,memory_size,percentage);
+    printf("SUCCESFULLY ALLOCATED : %d B (%d blocks) in memory of size: %d B , what is %.2f%% of my memory\n",user_allocated,user_allocated_blocks,memory_size,percentage);
     if (test_free == 1){
         printf("SUCCESFULLY FREED:      %d B\n",user_deallocated);
     }
