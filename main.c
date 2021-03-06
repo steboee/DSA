@@ -114,15 +114,19 @@ int memory_free(void* valid_ptr) {
     char*p;                 // Pomocný pointer
 
 
+    if (valid_ptr == NULL){                                 //Ak do funnkcie memory free vstúpi pointer ktorý neukazuje na nič napr(z memory_alloc keď nebolo dostatok pamäte)
+        return 1;
+    }
+
     header = (int*)valid_ptr;
     footer_before = (int*)valid_ptr - 1;
 
     p = (char*)header;
-    p= p + abs(*p) + VLK_HLAV + VLK_PATY;
+    p= p + abs(*header) + VLK_HLAV + VLK_PATY;
     header_after = (int*)p;
 
     p = (char*)header;
-    p = p + abs(*p) + VLK_HLAV;
+    p = p + abs(*header) + VLK_HLAV;
     footer = (int*)p;
 
     p = (char*)header_after;
@@ -130,7 +134,7 @@ int memory_free(void* valid_ptr) {
     footer_after = (int*)p;
 
     p = (char*)footer_before;
-    p = p - abs(*p)- VLK_PATY;
+    p = p - abs(*footer_before)- VLK_PATY;
     header_before = (int*)p;
 
 
@@ -146,7 +150,7 @@ int memory_free(void* valid_ptr) {
             *header = velkost;
             return 0;
         }
-        else{                                                 // |START HEAP|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
+        else{                                                 // |START OF HEAP|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
             *header = abs(*header);
             *footer = *header;
             return 0;
@@ -159,15 +163,16 @@ int memory_free(void* valid_ptr) {
             velkost = *header_before + abs(*header);
             *header_before = velkost;
             *footer = velkost;
+            return 0;
 
 
         }
 
 
         else{                                                  // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|END OF HEAP|
-
-
-
+            *header = abs(*header);
+            *footer = *header;
+            return 0;
         }
     }
 
@@ -192,7 +197,6 @@ int memory_free(void* valid_ptr) {
             header = NULL;
 
             return 0;
-
         }
 
         // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
@@ -279,18 +283,18 @@ void memory_init(void* ptr, unsigned int size) {
     *heap_start = size;                                                                                     //Zaciatok HEAP-u
 
     *head = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
-    *foot = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;      //Prvá patička
-    *heap_end = (int)size;                                                                      //Koniec Heap-u
+    *foot = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá patička
+    *heap_end = (int)size;                                                                       //Koniec Heap-u
 
 }
 
 
 
 int main(){
-    char region[100];
-    memory_init(region, 100);   // Initialization of my memory of 100bytes
+    char region[500];
+    memory_init(region, 500);   // Initialization of my memory of 100bytes
 
-    char *pointer1 = (char *) memory_alloc(10);
+    char *pointer1 = (char *) memory_alloc(300);
     char *pointer2 = (char *) memory_alloc(7);
     char *pointer3 = (char *) memory_alloc(2);
     char *pointer4 = (char *) memory_alloc(2);
