@@ -203,8 +203,8 @@ int memory_free(void* valid_ptr) {
         // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
         else if(*footer_before <0 && *header_after <0)  {                                    // |ALLOCATED|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
             velkost = abs(*header);
-            *header = abs(*header);
-            *footer = *header;
+            *header = velkost;
+            *footer = velkost;
 
             return 0;
         }
@@ -286,7 +286,7 @@ void memory_init(void* ptr, unsigned int size) {
 
 
 
-    char *mem_size = (char*)memory;
+
     *heap_start = size;                                                                                     //Zaciatok HEAP-u
 
     *head = (int)size - SIZE_OF_START_OF_HEAP - SIZE_OF_END_OF_HEAP-VLK_HLAV-VLK_PATY;           //Prvá hlavička
@@ -357,7 +357,7 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     int user_deallocated=0;
     int size_of_dealocated;
     bool PROBLEM = false;
-    int j=0;
+
     if (test_free == 1){
         for (int j = 0; j<i;j++){
             size_of_dealocated = abs(*pointers[j]);
@@ -387,6 +387,9 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     printf("SUCCESFULLY ALLOCATED : %d B (%d blocks) in memory of size: %d B , what is %.2f%% of my memory\n",user_allocated,user_allocated_blocks,memory_size,percentage);
     if (test_free == 1){
         printf("SUCCESFULLY FREED:      %d B\n",user_deallocated);
+    }
+    if (PROBLEM == true){
+        printf("PROBLEM IN MEMORY CHECK ..........\n");
     }
 
     puts("----------------------------------------------------------------------------");
