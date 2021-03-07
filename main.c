@@ -407,7 +407,7 @@ int main(){
     char region [100000];
 
 
-/*
+
 #pragma region Moj_maly_tester
     //MALY TESTER LEN NA SKÚŠANIE UVOĽNOVANIA a SPÁJANIA BLOKOV
     memory_init(region, 120);   // Initialization of my memory of 100bytes
@@ -465,7 +465,7 @@ int main(){
     memset(region,0,200);
     //MALY TESTER LEN NA SKÚŠANIE UVOĽNOVANIA a SPÁJANIA BLOKOV
 #pragma endregion Moj_maly_tester
-*/
+
 
 
 
