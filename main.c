@@ -62,10 +62,10 @@ void* memory_alloc(unsigned int size) {
 
 
 
-    char*pt= test+size+4+4;
+    char*pt= test+size+VLK_HLAV+VLK_PATY;                     // pt --> aktuálna pozícia pointra na možný voľný blok + veľkosť požadovanej pamäte + velkostť hlavičky + veĽkosť päty
 
-    if (pt > KONIEC){                           // Kontrola ak by uživateľ chcel alokovať viac Bytov ako je vôbec jeho zvyšná voľná pamäť veľká
-        //printf("ATTEMPTING TO ENTER OUTSIDE YOUR MEMORY\n");              //Moja kontrola ...
+    if (pt > KONIEC){                           // Kontrola ak by uživateľ chcel alokovať viac Bytov ako je vôbec jeho zvyšná voľná pamäť veľká ,,  aby nevyšiel z inicializovanej pamäte
+
         return NULL;                            // V tomto prípade sa použivateľovi vráti NULL pointer pretože chce alokovať pamäť o veľkosti väčšej než je dostupná pamäť V mojej HEAP
     }
 
@@ -385,7 +385,7 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     float percentage;
     percentage = (float)((float)user_allocated/(float)memory_size)*100; // Percentá Koľko Bytov bolo alokovaných oproti idealnemu riešeniu
 
-    //printf("User allocated : %d\nMemory size",user_allocated);
+
     printf("SUCCESFULLY ALLOCATED : %d B  divided into (%d block/s) in memory of size: %d B , what is %.2f%% of IDEAL ALLOCATION\n",user_allocated,user_allocated_blocks,memory_size,percentage);
     if (test_free == 1){
         printf("SUCCESFULLY FREED:      %d B\n",user_deallocated);
