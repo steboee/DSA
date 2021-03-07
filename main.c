@@ -6,12 +6,12 @@
 
 #include <stdbool.h>
 
-#define VLK_HLAV 4
-#define VLK_PATY 4
-#define SIZE_OF_START_OF_HEAP 4
-#define SIZE_OF_END_OF_HEAP 4
+#define VLK_HLAV 4                          // Velkost hlavičky bloku
+#define VLK_PATY 4                          // Velkost päty bloku
+#define SIZE_OF_START_OF_HEAP 4             // Velkost "hlavicky" inicializovanej pamäte
+#define SIZE_OF_END_OF_HEAP 4               // Velkost "päty" inicializovanej pamäte
 
-char*memory = NULL;
+char*memory = NULL;                         // pointer ktorý bude ukazovať na začiatok pamäte
 
 
 void* memory_alloc(unsigned int size) {
@@ -119,29 +119,30 @@ int memory_free(void* valid_ptr) {
         return 1;
     }
 
-    header = (int*)valid_ptr;
-    footer_before = (int*)valid_ptr - 1;
+    header = (int*)valid_ptr;                               // pointer na Hlavičku uvoľnovaného bloku
+    footer_before = (int*)valid_ptr - 1;                    // pointer na Pätu bloku pred uvoľnovaným blokom
 
     p = (char*)header;
     p= p + abs(*header) + VLK_HLAV + VLK_PATY;
-    header_after = (int*)p;
+    header_after = (int*)p;                                 // pointer na Hlavičku v poradí ďalšíeho bloku po uvoľnovanom bloku
 
     p = (char*)header;
     p = p + abs(*header) + VLK_HLAV;
-    footer = (int*)p;
+    footer = (int*)p;                                       // pointer na Pätu uvoľnovaného bloku
 
     p = (char*)header_after;
     p = p + abs(*header_after) + VLK_HLAV;
-    footer_after = (int*)p;
+    footer_after = (int*)p;                                 // pointer na Pätu v poradí ďalšieho bloku po uvoľnovanom bloku
 
     p = (char*)footer_before;
     p = p - abs(*footer_before)- VLK_PATY;
-    header_before = (int*)p;
-    *(char*)valid_ptr = NULL;
+    header_before = (int*)p;                                // pointer na Hlavičku bloku pred uvoľnovaným blokom
 
-    if((int*)footer_before == (int*)memory){                            //Odsraňujem prvý blok v pamati
-        velkost = abs(*header);
-        if(*header_after >0){                                // |START OF HEAP|----|WANT_TO_DEALLOCATE|----|FREE|
+
+    if (footer_before == (int*)memory){                            //Ak idem dealokovať prvý blok v pamäti
+        velkost = abs(*header);                                    // (*header) = Veľkosť alokovanej pamäťe --> absolútna hodnota pretože pri alokovanom bloku je velkosť v záporných číslach
+
+        if(*header_after >0){                                           // |START OF HEAP|----|WANT_TO_DEALLOCATE|----|FREE|
             velkost = velkost + *header_after + VLK_HLAV + VLK_PATY;
             *footer_after = velkost;
             *header_after =0;
@@ -225,7 +226,7 @@ int memory_free(void* valid_ptr) {
 
 
         //  |FREE|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
-        else if(*footer_before >0 && *header_after <0  ){
+        else if(*footer_before >0 && *header_after <0  ){                               //  |FREE|----|WANT_TO_DEALLOCATE|----|ALLOCATED|
             velkost = abs(*header) + *footer_before + VLK_HLAV + VLK_PATY;
             *header = 0;
             *footer_before =0;
@@ -247,24 +248,24 @@ int memory_check(void* ptr) {
     pointera = ptr;
     al = memory + *(int*)memory-1;
     int *KONIEC;
-    KONIEC = al;
+    KONIEC = al;                                // KONIEC - > ukazovateľ na koniec inicializovanej pamäte
     int*head;
-    head=(int*)memory+1;
+    head=(int*)memory+1;                        // head -> prvá hlavička inicializovanej pamäte
     char*test;
-    test = (char*)head;
+    test = (char*)head;                         // pomocný pointer na posúvanie
 
-    while((int*)test < KONIEC){
-        if(ptr == test) {
-            if(*pointera < 0){
+    while((int*)test < KONIEC){                    // Prechádzam hlavičky až kým nedojdem na koniec
+        if(ptr == test) {                           // ak sa pointer ktorý vstupil do funkcie memory_check == nejakej mojej hlavičke
+            if(*pointera < 0){                      // ak je ten blok alokovaný tak memory_check prebehla úspešne a daný pointer je validný
                 return 1;
             }
-            else{
+            else{                                   // ak je ten blok voľný tak daný pointer nie je validný
                 return 0;
             }
         }
         else{
-            int ofsetik = abs(*head)+  VLK_HLAV + VLK_PATY;
-            test = test+ofsetik;
+            int ofsetik = abs(*head)+  VLK_HLAV + VLK_PATY;                 // offsetik -> počet Bytov o koľko sa má posunúť pomocný pointer test
+            test = test+ofsetik;                                            // posunutie na ďalšiu hlavičku
             head = test;
         }
     }
@@ -308,19 +309,19 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     int user_allocated_blocks =0;
 
     int free_memory_size;
-    free_memory_size = memory_size - SIZE_OF_END_OF_HEAP - SIZE_OF_START_OF_HEAP - VLK_PATY - VLK_HLAV;
+    free_memory_size = memory_size - SIZE_OF_END_OF_HEAP - SIZE_OF_START_OF_HEAP - VLK_PATY - VLK_HLAV;             // zostatok voľnej pamate pre používatela
 
 
-    time_t seconds;
-    seconds = time(NULL);
-    srand(seconds);
+    time_t seconds;             // náhodný generátor
+    seconds = time(NULL);       //
+    srand(seconds);             //
 
 
 
 
     puts("----------------------------------------------------------------------------");
 
-    printf("min block size: %d\nmax_block_size: %d\nmemory_size: %d\n",min_block_size,max_block_size,memory_size);
+    printf("min block size: %d B\nmax_block_size: %d B\nmemory_size: %d B\n",min_block_size,max_block_size,memory_size);
 
 
 
@@ -328,14 +329,14 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     int i=0;
     while(free_memory_size >= min_block_size ){
 
-        ran_block_size = (rand() % (max_block_size + 1 - min_block_size)) + min_block_size;
+        ran_block_size = (rand() % (max_block_size + 1 - min_block_size)) + min_block_size;                                         // náhodná veľkosť uživateľskej pamate
 
 
-        pointers[i] = memory_alloc(ran_block_size);
+        pointers[i] = memory_alloc(ran_block_size);                                                                                   // alokácia náhodnej veľkosti uživateľskej pamäte
 
 
 
-        if (pointers[i]){
+        if (pointers[i]){                                                                                               // Ak alokácia prebehla úspešne
 
             user_allocated  = user_allocated + abs(*(int*)pointers[i]);
             allocated__plus_header_footer = allocated__plus_header_footer + VLK_HLAV+VLK_PATY;
@@ -358,18 +359,19 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
     int size_of_dealocated;
     bool PROBLEM = false;
 
-    if (test_free == 1){
+    if (test_free == 1){                                // Ak idem kontrolovať uvoĽnovanie blokov
         for (int j = 0; j<i;j++){
-            size_of_dealocated = abs(*pointers[j]);
+            size_of_dealocated = abs(*pointers[j]);             // program si zapamatá velkosť uzivatelskej pamate ktorá sa ide uvolniť
             memory_free(pointers[j]);
             if(memory_check(pointers[j])==1) {
+
                 printf("PROBLEM! memory_free invalid");
                 PROBLEM = true;
 
             }
             else {
-                user_deallocated = user_deallocated + size_of_dealocated;
-                //printf("%d\n",j);
+                user_deallocated = user_deallocated + size_of_dealocated;               // po uspešnom dealokovaní pamäte ...
+
             }
         }
 
@@ -381,10 +383,10 @@ void tester(char*region,int min_block_size,int max_block_size,int memory_size,in
 
 
     float percentage;
-    percentage = (float)((float)user_allocated/(float)memory_size)*100;
+    percentage = (float)((float)user_allocated/(float)memory_size)*100; // Percentá Koľko Bytov bolo alokovaných oproti idealnemu riešeniu
 
     //printf("User allocated : %d\nMemory size",user_allocated);
-    printf("SUCCESFULLY ALLOCATED : %d B (%d blocks) in memory of size: %d B , what is %.2f%% of my memory\n",user_allocated,user_allocated_blocks,memory_size,percentage);
+    printf("SUCCESFULLY ALLOCATED : %d B  divided into (%d block/s) in memory of size: %d B , what is %.2f%% of IDEAL ALLOCATION\n",user_allocated,user_allocated_blocks,memory_size,percentage);
     if (test_free == 1){
         printf("SUCCESFULLY FREED:      %d B\n",user_deallocated);
     }
@@ -405,38 +407,78 @@ int main(){
     char region [100000];
 
 
-    /*
-
-
+/*
+#pragma region Moj_maly_tester
     //MALY TESTER LEN NA SKÚŠANIE UVOĽNOVANIA a SPÁJANIA BLOKOV
-    memory_init(region, 200);   // Initialization of my memory of 100bytes
+    memory_init(region, 120);   // Initialization of my memory of 100bytes
 
     char *pointer1 = (char *) memory_alloc(18);
     char *pointer2 = (char *) memory_alloc(40);
-    memory_free(pointer1);
+
+    if (memory_check(pointer1)==1){
+        memory_free(pointer1);
+    }
+    else{
+        printf("pointer1 nie je platny ");
+    }
+
     char *pointer3 = (char *) memory_alloc(2);
     char *pointer4 = (char *) memory_alloc(80);
     char *pointer5 = (char *) memory_alloc(2);
     char *pointer6 = (char *) memory_alloc(2);
 
-    memory_free(pointer3);
-    memory_free(pointer4);
-    memory_free(pointer2);
-    memory_free(pointer5);
-    memory_free(pointer6);
+
+    if (memory_check(pointer3) == 1){
+        memory_free(pointer3);
+    }
+    else{
+        printf("pointer3 nie je platny");
+    }
+
+    if (memory_check(pointer4) == 1){                       // pointer4 sa nepodarilo alokovať čiže ani nepojde do memory free pretože je neplatný
+        memory_free(pointer4);
+    }
+    else{
+        printf("pointer4 nie je platny");
+    }
+
+    if (memory_check(pointer2) == 1){
+        memory_free(pointer2);
+    }
+    else{
+        printf("pointer2 nie je platny");
+    }
+
+    if (memory_check(pointer5) == 1){
+        memory_free(pointer5);
+    }
+    else{
+        printf("pointer5 nie je platny");
+    }
+
+    if (memory_check(pointer6) == 1){
+        memory_free(pointer6);
+    }
+    else{
+        printf("pointer6 nie je platny");
+    }
     memset(region,0,200);
     //MALY TESTER LEN NA SKÚŠANIE UVOĽNOVANIA a SPÁJANIA BLOKOV
+#pragma endregion Moj_maly_tester
+*/
 
-
-     */
 
 
 
 
     printf("TEST 1 ++++++++++++++++++++++++++++++++++++++\n");
     tester(region , 8 , 8 , 50 , 1);
+    tester(region , 16 , 16 , 50 , 1);
+    tester(region , 24 , 24 , 50 , 1);
     tester(region , 16 , 16 , 100 , 1);
+    tester(region , 10 , 10 , 100 , 1);
     tester(region , 24 , 24 , 200 , 1);
+    tester(region , 8 , 8 , 200 , 1);
 
     printf("TEST 2 ++++++++++++++++++++++++++++++++++++++\n");
     tester(region , 8 , 24 , 50 , 1 );
@@ -444,12 +486,14 @@ int main(){
     tester(region , 8 , 24 , 200 , 1 );
 
     printf("TEST 3 ++++++++++++++++++++++++++++++++++++++\n");
-    tester(region , 500 , 800 , 10000 , 0 );
+    tester(region , 100 , 800 , 10000 , 0 );
     tester(region , 500 , 1000 , 10000 , 0 );
     tester(region , 1000, 5000 , 10000 , 0 );
 
     printf("TEST 4 ++++++++++++++++++++++++++++++++++++++\n");
-    tester(region , 8 , 50000 , 75420 , 0 );
+    tester(region , 8 , 50000 , 1000 , 0 );
+    tester(region , 8 , 50000 , 25000 , 0 );
+    tester(region , 8 , 50000 , 34780 , 0 );
 
 
     return 0;
